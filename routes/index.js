@@ -41,7 +41,27 @@ router.post("/emp/login", async (req, res) => {
     const emergencyAlertAdded = await emergencyEvent.save()
 
     //add twillio broadcast calls functionality here
-    res.send({ message: "Successfully added emergency event" })
+
+
+    res.status(200).send({ status:"success", message: "Successfully added emergency event" })
+ })
+
+ router.get("/emergency_alert/check_status", async(req, res) => {
+    const emergencyEventisRunning = await EmergencyEvent.findOne({ "emergency_status": "is_happening" })
+
+    if(!emergencyEventisRunning)
+        return res.send({"emergency_status": "ended"})
+    
+    return res.send({ "emergency_status": emergencyEventisRunning.emergency_status })
+ })
+
+ router.get("/emergency_alert/end", async(req, res) => {
+     const emergencyEnded = await EmergencyEvent.findOneAndUpdate({ "emergency_status": "is_happening"}, {"emergency_status": "ended"})
+     
+    if(emergencyEnded)
+        return res.status(500).send({"emergency_status":"no_emergency", "message": "No Emergency happening"})
+    else
+        return res.status(200).send({ "emergency_status":"ended", "message": "Successfully ended emergency event" })
  })
 
 module.exports = router;
