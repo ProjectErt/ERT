@@ -5,7 +5,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 
 mongoose.connect(
-    "mongodb+srv://project-ert:project-ert@cluster0.rfvlx.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+    "mongodb+srv://project-ert:project-ert@cluster0.rfvlx.mongodb.net/project-ert?retryWrites=true&w=majority",
     {
         useUnifiedTopology: true,
         useNewUrlParser: true
