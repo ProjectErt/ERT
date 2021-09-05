@@ -58,10 +58,19 @@ router.post("/emp/login", async (req, res) => {
  router.get("/emergency_alert/end", async(req, res) => {
      const emergencyEnded = await EmergencyEvent.findOneAndUpdate({ "emergency_status": "is_happening"}, {"emergency_status": "ended"})
      
-    if(emergencyEnded)
+    if(!emergencyEnded)
         return res.status(500).send({"emergency_status":"no_emergency", "message": "No Emergency happening"})
     else
         return res.status(200).send({ "emergency_status":"ended", "message": "Successfully ended emergency event" })
  })
+
+ router.get("/emergency_alert/safe_emp", async(req, res) => {
+    const safeEmployees = await EmergencyEvent.findOne({"emergency_status": "is_happening"}).select("safe_employees")
+    if(safeEmployees){
+        safeEmployees.emergency_status = "is_happening"
+        return res.send(safeEmployees)
+    }
+    return res.send({ "emergency_status":"no_emergency", "message": "No emergency event happening" })
+})
 
 module.exports = router;
