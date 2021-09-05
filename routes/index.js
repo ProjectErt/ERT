@@ -31,4 +31,17 @@ router.post("/emp/login", async (req, res) => {
 
  })
 
+ router.get("/emergency_alert/start", async (req, res) => {
+    const emergencyEvent = new EmergencyEvent({
+        emergency_event_id: Date.now(),
+        emergency_status: "is_happening",
+        safe_employees: []
+    })
+
+    const emergencyAlertAdded = await emergencyEvent.save()
+
+    //add twillio broadcast calls functionality here
+    res.send({ message: "Successfully added emergency event" })
+ })
+
 module.exports = router;
