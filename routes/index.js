@@ -18,17 +18,16 @@ router.post("/login", async (req, res) => {
 
 router.post("/emp/login", async (req, res) => {
     const email = req.body.email
-    const phoneNumber = req.body.phone_number
+    const password = req.body.password
     const employee = await Employee.findOne({ "email": email })
 
     if(!employee)
         return res.send({ employee_logged_in: false, message: "Check you entered email" })
     
-    if(employee.phone_number !== phoneNumber)
+    if(employee.phone_number.toString() !== password.toString())
         return res.send({ employee_logged_in: false, message: "Check you entered password" })
         
-    return res.send({ employee_logged_in: true, message: "Logged in successfully" })
-
+    return res.send({ employee_logged_in: true, message: "Logged in successfully", employee_id: employee.employee_id  })
  })
 
  router.get("/emergency_alert/start", async (req, res) => {
@@ -40,10 +39,29 @@ router.post("/emp/login", async (req, res) => {
 
     const emergencyAlertAdded = await emergencyEvent.save()
 
-    //add twillio broadcast calls functionality here
+    const accountSid = 'ACf06d6f13746a745b3bd6fa88ab9a26c4';
+    const authToken = 'e9f65194c99bbf40fa62b47666d64bf5';
+    const client = require('twilio')(accountSid, authToken);
+    const employees= await Employee.find({})
+   
+    employees.forEach (employee=>{
+        client.calls
+        .create({
+           url: 'http://demo.twilio.com/docs/voice.xml',
+           to: '+91'+ employee.phone_number,
+           from: '+18508188361'
+         })
+        
 
+        client.messages
+        .create({
+            body: 'Emergency Alert!!! Visit to MarkYourSelfSafe : http://localhost:3000/emp',
+            to: '+91'+ employee.phone_number,
+            from: '+18508188361'
+        })
+    })
 
-    res.status(200).send({ status:"success", message: "Successfully added emergency event" })
+    return res.status(200).send({ status:"success", message: "Successfully added emergency event" })
  })
 
  router.get("/emergency_alert/check_status", async(req, res) => {
