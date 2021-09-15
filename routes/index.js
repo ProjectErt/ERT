@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const Employee = require('../model/Employee')
-const EmergencyEvent = require('../model/EmergencyEvent')
+const EmergencyEvent = require('../model/EmergencyEvent');
 
 router.get("/twillio", async (req, res) => {
     console.log("works")
@@ -40,10 +40,9 @@ router.post("/emp/login", async (req, res) => {
     const emergencyAlertAdded = await emergencyEvent.save()
 
     const accountSid = 'ACf06d6f13746a745b3bd6fa88ab9a26c4';
-    const authToken = 'e9f65194c99bbf40fa62b47666d64bf5';
+    const authToken = '15fd62f4c0c07f61e56e1ccf7e21c45e';
     const client = require('twilio')(accountSid, authToken);
     const employees= await Employee.find({})
-   
     employees.forEach (employee=>{
         client.calls
         .create({
@@ -74,7 +73,7 @@ router.post("/emp/login", async (req, res) => {
  })
 
  router.get("/emergency_alert/end", async(req, res) => {
-     const emergencyEnded = await EmergencyEvent.findOneAndUpdate({ "emergency_status": "is_happening"}, {"emergency_status": "ended"})
+    const emergencyEnded = await EmergencyEvent.findOneAndUpdate({ "emergency_status": "is_happening"}, {"emergency_status": "ended"})
      
     if(!emergencyEnded)
         return res.status(500).send({"emergency_status":"no_emergency", "message": "No Emergency happening"})
@@ -89,6 +88,19 @@ router.post("/emp/login", async (req, res) => {
         return res.send(safeEmployees)
     }
     return res.send({ "emergency_status":"no_emergency", "message": "No emergency event happening" })
+})
+
+router.post("/employee/marked_as_safe", async(req, res) => {
+    const emergencyEvent = await EmergencyEvent.find({emergency_status:"is_happening"}).select("safe_employees")
+    const safeEmployees = emergencyEvent[0].safe_employees
+
+    const {email, phone_number} = req.body
+    const markedEmployee = {email, phone_number: phone_number}
+    safeEmployees.push(markedEmployee)
+
+    await EmergencyEvent.findOneAndUpdate({ "emergency_status": "is_happening"}, {safe_employees: safeEmployees})
+
+    res.send({'message': 'You have been marked as safe', 'status':'marked_safe'})
 })
 
 module.exports = router;
