@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const Employee = require('../model/Employee')
 const EmergencyEvent = require('../model/EmergencyEvent');
+const EmployeeStatus = require('../model/EmployeeStatus')
 
 router.get("/twillio", async (req, res) => {
     console.log("works")
@@ -38,6 +39,7 @@ router.post("/emp/login", async (req, res) => {
     })
 
     const emergencyAlertAdded = await emergencyEvent.save()
+    const markedEveryoneUnsafe = await EmployeeStatus.updateMany({}, { is_safe: false })
 
     const accountSid = 'ACf06d6f13746a745b3bd6fa88ab9a26c4';
     const authToken = '15fd62f4c0c07f61e56e1ccf7e21c45e';
@@ -100,7 +102,42 @@ router.post("/employee/marked_as_safe", async(req, res) => {
 
     await EmergencyEvent.findOneAndUpdate({ "emergency_status": "is_happening"}, {safe_employees: safeEmployees})
 
+
     res.send({'message': 'You have been marked as safe', 'status':'marked_safe'})
 })
+
+router.post("/emp/marked_as_safe", async(req, res)=> {
+    const {email} = req.body
+
+    const markAsSafe = await EmployeeStatus.findOneAndUpdate({ "email": email}, {is_safe: true })
+
+    return res.send({"status": "OK"})
+})
+
+router.get("/employee/not_safe", async(req, res) => {
+    const unsafeEmployees= await EmployeeStatus.find({
+        "is_safe":false
+    })
+    if(unsafeEmployees.length === 0){
+     return res.send({ "status": "none", "message": "None one is safe yet"})
+ 
+    }
+ 
+    return  res.send({ "unsafe_employees": unsafeEmployees, "status": "OK", })
+ })
+
+
+ router.get("/employee/safe", async(req, res) => {
+    const safeEmployees= await EmployeeStatus.find({
+        "is_safe":true
+    })
+    if(safeEmployees.length === 0){
+     return res.send({ "status": "none", "message": "None one is safe yet"})
+ 
+    }
+ 
+    return  res.send({ "safe_employees": safeEmployees, "status": "OK", })
+ })
+
 
 module.exports = router;
